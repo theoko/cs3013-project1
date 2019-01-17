@@ -65,7 +65,7 @@ int main(int argc, char const *argv[])
     while(TRUE) {
         if(userInput(option) == 0) {
             // Input read successfully 
-            printf("%d", *option);
+            checkCommand(*option);
         } else {
             // Error reading input
             // Print error message
