@@ -18,11 +18,15 @@ int executeCommand(char* command);
 
 void initConsole() {
 
-	printf("===== Mid-Day Commander, v0 =====\n");
+	printf("===== Mid-Day Commander, v1 =====\n");
 	printf("G’day, Commander! What command would you like to run?\n");
 	printf("\t0. whoami : Prints out the result of the whoamicommand\n");
 	printf("\t1. last : Prints out the result of the last command\n");
 	printf("\t2. ls : Prints out the result of a listing on  a user-specified path\n");
+	printf("\ta. add command : Adds a new command to the menu.\n");
+	printf("\tc. change directory : Changes process working directory\n");
+	printf("\te. exit : Leave Mid-Day Commander\n");
+	printf("\tp. pwd : Prints working directory\n");
 	printf("Option?: ");	
 	
 }
