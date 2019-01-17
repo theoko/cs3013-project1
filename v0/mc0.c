@@ -1,3 +1,4 @@
+#include <pthread.h> 
 #include<stdio.h>
 #include<stdlib.h>
 #include<unistd.h>
@@ -5,7 +6,9 @@
 #include<sys/wait.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <sys/types.h> 
 
+#define MAX 5
 #define TRUE 1
 
 void initConsole();
@@ -45,21 +48,22 @@ int executeCommand(char* command) {
         char *argv[2];
         argv[0] = command;
         argv[1] = NULL;
-	
-	struct timeval tv1, tv2; // To calculate the time the command took to execute (milliseconds)
-	gettimeofday(&tv1, NULL);
+
         execvp(command, argv);
-	gettimeofday(&tv2, NULL);
-	long int timeToExecute = (tv2.tv_usec - tv1.tv_usec)/1000 + (tv2.tv_sec - tv1.tv_sec)*1000;
+	
 	
 
     } else {
+	struct timeval tv1, tv2; // To calculate the time the command took to execute (milliseconds)
+	gettimeofday(&tv1, NULL);
 	int rc_wait = wait(NULL);
+	gettimeofday(&tv2, NULL);
 	// print out statistics
+	long int timeToExecute = (tv2.tv_usec - tv1.tv_usec)/1000 + (tv2.tv_sec - tv1.tv_sec)*1000;
 	struct rusage usage;
 	getrusage(RUSAGE_CHILDREN, &usage);	
 	getrusage(RUSAGE_CHILDREN, &usage);
-	printf("\n-- Statistics --\nElapsed Time: %ld milliseconds\nPage Faults: %ld\nPage Faults (reclaimed): %ld\n\n", 5 , usage.ru_majflt, usage.ru_minflt);
+	printf("\n-- Statistics --\nElapsed Time: %ld milliseconds\nPage Faults: %ld\nPage Faults (reclaimed): %ld\n\n", timeToExecute, usage.ru_majflt, usage.ru_minflt);
     }
 }
 
