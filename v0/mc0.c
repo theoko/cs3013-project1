@@ -8,7 +8,6 @@
 #include <sys/resource.h>
 #include <sys/types.h> 
 
-#define MAX 5
 #define TRUE 1
 
 void initConsole();
