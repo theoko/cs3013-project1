@@ -46,7 +46,7 @@ int executeCommand(char* command) {
 
         execvp(command, argv);
     } else {
-
+	int rc_wait = wait(NULL);
     }
 }
 
