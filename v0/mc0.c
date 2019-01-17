@@ -6,9 +6,21 @@
 
 #define TRUE 1
 
+void initConsole();
 int userInput(int *option);
 int checkCommand(int command);
 int executeCommand(char* command);
+
+void initConsole() {
+
+	printf("===== Mid-Day Commander, v0 =====\n");
+	printf("G’day, Commander! What command would you like to run?\n");
+	printf("\t0. whoami : Prints out the result of the whoamicommand\n");
+	printf("\t0. last : Prints out the result of the last command\n");
+	printf("\t0. ls : Prints out the result of a listing on  a user-specified path\n");
+	printf("Option?: ");	
+	
+}
 
 int userInput(int *option) {
     int check = scanf("%d", option);
@@ -27,7 +39,12 @@ int executeCommand(char* command) {
         fprintf(stderr, "fork failed\n");
         exit(1);
     } else if(rc == 0) {
+        char *argv[3];
+        argv[0] = command;
+        argv[1] = NULL;
+        argv[2] = NULL;
 
+        execvp(command, argv);
     } else {
 
     }
@@ -55,12 +72,15 @@ int checkCommand(int command) {
 
 int main(int argc, char const *argv[])
 {
+
+    initConsole();
+
     int *option = malloc(sizeof(int));
 
     while(TRUE) {
         if(userInput(option) == 0) {
-            // Input read successfully
-            printf("%d", *option);
+            // Input read successfully 
+            checkCommand(*option);
         } else {
             // Error reading input
             // Print error message
@@ -72,3 +92,4 @@ int main(int argc, char const *argv[])
     
     return 0;
 }
+
