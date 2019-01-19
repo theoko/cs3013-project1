@@ -11,7 +11,7 @@
 #define TRUE 1
 
 void initConsole();
-int userInput(int *option);
+int userInput(char *option);
 int checkCommand(int command);
 int executeCommand(char *command);
 
@@ -30,16 +30,16 @@ void initConsole()
     printf("Option?: ");
 }
 
-int userInput(int *option)
-{
-    int check = scanf("%d", option);
+int userInput(char *option)
+{    
+    int check = scanf("%c", option);
+    getchar();
 
-    if (check == 1)
-    {
+    if (check == 1) {
         return 0;
+    } else {
+        return -1;
     }
-
-    return -1;
 }
 
 int executeCommand(char *command)
@@ -75,19 +75,21 @@ int executeCommand(char *command)
 
 int checkCommand(int command)
 {
+    // printf(command);
+
     switch (command)
     {
-    case 0:
+    case '0':
         printf("\n\n-- Who Am I? --\n");
         return executeCommand("whoami");
         break;
 
-    case 1:
+    case '1':
         printf("\n\n-- Last Logins --\n");
         return executeCommand("last");
         break;
 
-    case 2:
+    case '2':
         printf("\n\n-- Directory Listing --\n");
         return executeCommand("ls");
         break;
@@ -101,21 +103,24 @@ int checkCommand(int command)
 int main(int argc, char const *argv[])
 {
 
-    int *option = malloc(sizeof(int));
-
+    char *option = malloc(sizeof(char));
+    
     while (TRUE)
-    {
+    {        
 
         initConsole();
 
         if (userInput(option) == 0)
         {
 
-            if (*option == 0 || *option == 1 || *option == 2)
+            // if (*option == '0' || *option == '1' || *option == '2')
+            //     printf("Test!");
                 // Input read successfully
-                checkCommand(*option);
-            else
-                fprintf(stderr, "\n\nWrong input. Please type an integer from 0 to 2\n\n");
+            checkCommand(*option);
+
+            // else
+            //     fprintf(stderr, "\n\nWrong input. Please type an integer from 0 to 2\n\n");
+        
         }
         else
         {
