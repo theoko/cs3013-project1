@@ -11,13 +11,13 @@
 #define TRUE 1
 #define MAX_DIR_LEN 255
 
-void initConsole(int *customCommand);
-void customCommands(int *customCommand);
+void initConsole(); //int *customCommand
+//void customCommands(int *customCommand);
 int userInput(char *option);
 int checkCommand(int command, int *customCommand);
 int executeCommand(char *command);
 
-void initConsole(int *customCommand)
+void initConsole()//int *customCommand
 {
 
     printf("===== Mid-Day Commander, v1 =====\n");
@@ -25,7 +25,7 @@ void initConsole(int *customCommand)
     printf("\t0. whoami : Prints out the result of the whoamicommand\n");
     printf("\t1. last : Prints out the result of the last command\n");
     printf("\t2. ls : Prints out the result of a listing on  a user-specified path\n");
-    customCommands(customCommand);
+    //customCommands(customCommand);
     printf("\ta. add command : Adds a new command to the menu.\n");
     printf("\tc. change directory : Changes process working directory\n");
     printf("\te. exit : Leave Mid-Day Commander\n");
@@ -33,9 +33,9 @@ void initConsole(int *customCommand)
     printf("Option?: ");
 }
 
-void customCommands(int *customCommand) {
+// void customCommands(int *customCommand) {
     
-}
+// }
 
 int userInput(char *option)
 {    
@@ -102,7 +102,7 @@ int checkCommand(int command, int *customCommand)
     
     case 'a':
         printf("\n\n-- Add a command --\n");
-        
+        printf("Command to add?: ");
         break;
 
     case 'c':
