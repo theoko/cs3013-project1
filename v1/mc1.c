@@ -9,13 +9,15 @@
 #include <sys/types.h>
 
 #define TRUE 1
+#define MAX_DIR_LEN 255
 
-void initConsole();
+void initConsole(int *customCommand);
+void customCommands(int *customCommand);
 int userInput(char *option);
-int checkCommand(int command);
+int checkCommand(int command, int *customCommand);
 int executeCommand(char *command);
 
-void initConsole()
+void initConsole(int *customCommand)
 {
 
     printf("===== Mid-Day Commander, v1 =====\n");
@@ -23,11 +25,16 @@ void initConsole()
     printf("\t0. whoami : Prints out the result of the whoamicommand\n");
     printf("\t1. last : Prints out the result of the last command\n");
     printf("\t2. ls : Prints out the result of a listing on  a user-specified path\n");
+    customCommands(customCommand);
     printf("\ta. add command : Adds a new command to the menu.\n");
     printf("\tc. change directory : Changes process working directory\n");
     printf("\te. exit : Leave Mid-Day Commander\n");
     printf("\tp. pwd : Prints working directory\n");
     printf("Option?: ");
+}
+
+void customCommands(int *customCommand) {
+    
 }
 
 int userInput(char *option)
@@ -73,9 +80,8 @@ int executeCommand(char *command)
     }
 }
 
-int checkCommand(int command)
+int checkCommand(int command, int *customCommand)
 {
-    // printf(command);
 
     switch (command)
     {
@@ -93,6 +99,42 @@ int checkCommand(int command)
         printf("\n\n-- Directory Listing --\n");
         return executeCommand("ls");
         break;
+    
+    case 'a':
+        printf("\n\n-- Add a command --\n");
+        
+        break;
+
+    case 'c':
+        printf("\n\n-- Change directory --\n");
+        
+        char directory[MAX_DIR_LEN];
+
+        printf("New Directory?: ");
+        int check = scanf("%s", directory);
+        getchar();
+        
+        if(check == 1) {
+            if(chdir(directory) == 0)        
+                return 0;
+            else 
+                return -2;
+        } else {
+            fprintf(stderr, "\n\nWrong input. Please input a valid path.\n");
+            exit(1);
+        }        
+        
+        break;
+
+    case 'e':
+        printf("Logging you out, Commander.\n");
+        exit(0);
+        break;
+
+    case 'p':
+        printf("\n\n-- Current directory --\n");
+        return executeCommand("pwd");
+        break;
 
     default:
         return -1;
@@ -105,6 +147,9 @@ int main(int argc, char const *argv[])
 
     char *option = malloc(sizeof(char));
     
+    int *customCommand = malloc(sizeof(int));
+    *customCommand = 3;
+
     while (TRUE)
     {        
 
@@ -116,7 +161,7 @@ int main(int argc, char const *argv[])
             // if (*option == '0' || *option == '1' || *option == '2')
             //     printf("Test!");
                 // Input read successfully
-            checkCommand(*option);
+            checkCommand(*option, customCommand);
 
             // else
             //     fprintf(stderr, "\n\nWrong input. Please type an integer from 0 to 2\n\n");
