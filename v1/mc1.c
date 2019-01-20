@@ -37,7 +37,16 @@ void initConsole() //int *customCommand
 
     for (int i = 0; i < command_index; i++)
     {
-        printf("\t%d. %s : User added command\n", i + 3, *(commands + i));
+	printf("\t%d. ", i + 3);
+	int j;
+	for (j=0; i<sizeof(commands)/sizeof(commands[0]); j++) {
+
+		if (commands[j]=='\0' && commands[j+1]=='\0') break;
+	        printf("%s ", commands[j]);
+	}	
+
+
+	printf(": User added command\n");
     }
 
     printf("\ta. add command : Adds a new command to the menu.\n");
@@ -183,8 +192,10 @@ int checkCommand(int command)
         // Check that user has added custom commands
         printf("%d\n", command_index);
         printf("%d\n", command);
+	command -= 48;
         if (command_index > 0 && command < command_index + 3)
         {
+
             return executeAddedCommand(commands[command - 3]);
         }
 
@@ -193,9 +204,39 @@ int checkCommand(int command)
     }
 }
 
-int executeAddedCommand(char *command)
+int executeAddedCommand(char input[])
 {
-    printf("--%s--", command);
+    char **command;
+
+    command = parseCommand(input);
+    int rc = fork();
+
+    if (rc < 0)
+    {
+        fprintf(stderr, "fork failed\n");
+        exit(1);
+    }
+    else if (rc == 0)
+    {
+        execvp(command[0], command);
+        printf("execvp was not successful\n");
+
+    }
+    else
+    {
+        struct timeval tv1, tv2; // To calculate the time the command took to execute (milliseconds)
+        gettimeofday(&tv1, NULL);
+        wait(NULL);
+        gettimeofday(&tv2, NULL);
+
+        // print out statistics
+        long int timeToExecute = (tv2.tv_usec - tv1.tv_usec) / 1000 + (tv2.tv_sec - tv1.tv_sec) * 1000;
+        struct rusage usage;
+        getrusage(RUSAGE_CHILDREN, &usage);
+        printf("\n-- Statistics --\nElapsed Time: %ld milliseconds\nPage Faults: %ld\nPage Faults (reclaimed): %ld\n\n", timeToExecute, usage.ru_majflt, usage.ru_minflt);
+    }
+    
+    free(command);
 
     return 0;
 }
