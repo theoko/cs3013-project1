@@ -16,6 +16,7 @@
 void initConsole(); //int *customCommand
 int userInput(char *option);
 int checkCommand(int command);
+char **parseCommand(char *);
 int executeCommand(char *command);
 
 void remove_spaces(char *source);
@@ -131,7 +132,7 @@ int checkCommand(int command)
 
         strcpy(commands[command_index], command_input);
 
-        printf("Okay, added with ID %d!\n\n", command_index);
+        printf("Okay, added with ID %d!\n\n", command_index + 3);
 
         free(command_input);
         command_index++;
@@ -182,9 +183,9 @@ int checkCommand(int command)
         if (customCommand != 0)
         {
             // Check that user has added custom commands
-            if (command_index > 0)
+            if (command_index > 0 && customCommand < command_index + 3)
             {
-                
+                return fuckingConversation(commands[customCommand - 3]);
             }
         }
 
@@ -237,6 +238,27 @@ char **make2Dchar(int nrows, int ncolumns, char **old)
         }
     }
     return a;
+}
+
+char **parseCommand(char input[])
+{
+    char **command = malloc(8 * sizeof(char *));
+    char *separator = " ";
+    char *parsed;
+    int index = 0;
+
+    parsed = strtok(input, separator);
+
+    while (parsed != NULL)
+    {
+        command[index] = parsed;
+        index++;
+
+        parsed = strtok(NULL, separator);
+    }
+
+    command[index] = NULL;
+    return command;
 }
 
 int main(int argc, char const *argv[])
