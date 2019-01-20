@@ -21,7 +21,6 @@ int executeCommand(char *command);
 int executeAddedCommand(char *command);
 
 void remove_spaces(char *source);
-char **make2Dchar(int nrows, int ncolumns, char **old);
 
 int command_index = 0;
 char *commands[COMMANDS_MAX];
@@ -183,12 +182,11 @@ int checkCommand(int command)
         // Check that user has added custom commands
         printf("%d\n", command_index);
         printf("%d\n", command);
-        command -= 48;
+	    command -= 48;
         if (command_index > 0 && command < command_index + 3)
         {
-            char **toExec = parseCommand(commands[command - 3]);
 
-            return executeAddedCommand(toExec);
+            return executeAddedCommand(commands[command - 3]);
         }
 
         return -1;
@@ -196,9 +194,39 @@ int checkCommand(int command)
     }
 }
 
-int executeAddedCommand(char *command)
+int executeAddedCommand(char input[])
 {
-    printf("--%s--", command);
+    char **command;
+
+    command = parseCommand(input);
+    int rc = fork();
+
+    if (rc < 0)
+    {
+        fprintf(stderr, "fork failed\n");
+        exit(1);
+    }
+    else if (rc == 0)
+    {
+        execvp(command[0], command);
+        printf("execvp was not successful\n");
+
+    }
+    else
+    {
+        struct timeval tv1, tv2; // To calculate the time the command took to execute (milliseconds)
+        gettimeofday(&tv1, NULL);
+        wait(NULL);
+        gettimeofday(&tv2, NULL);
+
+        // print out statistics
+        long int timeToExecute = (tv2.tv_usec - tv1.tv_usec) / 1000 + (tv2.tv_sec - tv1.tv_sec) * 1000;
+        struct rusage usage;
+        getrusage(RUSAGE_CHILDREN, &usage);
+        printf("\n-- Statistics --\nElapsed Time: %ld milliseconds\nPage Faults: %ld\nPage Faults (reclaimed): %ld\n\n", timeToExecute, usage.ru_majflt, usage.ru_minflt);
+    }
+    
+    free(command);
 
     return 0;
 }
@@ -216,58 +244,29 @@ void remove_spaces(char *source)
     *i = 0;
 }
 
-char **make2Dchar(int nrows, int ncolumns, char **old)
+char **parseCommand(char inputCommand[])
 {
-
-    char **a;       // Array of pointers to rows
-    unsigned int i; // Loop counter
-
-    // First allocate the array of pointers to rows
-    a = (char **)malloc(nrows * sizeof(char *));
-    if (!a)
-    { // Unable to allocate the array
-        return (char **)NULL;
-    }
-
-    // Now allocate array for each row
-    for (i = 0; i < nrows; i++)
-    {
-        // i is the row we are about to allocate
-        a[i] = malloc(ncolumns * sizeof(char));
-        if (!a[i])
-        {
-            return (char **)NULL; // Unable to allocate
-        }
-
-        if (nrows < command_index)
-        {
-            // memset(a[i], '\0', strlen(a[i]));
-            printf("Copy: %s to %s", old[i], a[i]);
-            strncpy(a[i], old[i], BUFFERSIZE);
-        }
-    }
-    return a;
-}
-
-char **parseCommand(char input[])
-{
-    char **command = malloc(8 * sizeof(char *));
+    char **comm = malloc(8 * sizeof(char *));
     char *separator = " ";
     char *parsed;
     int j = 0;
 
-    parsed = strtok(input, separator);
+    char tmp[strlen(inputCommand)+1];
+
+    strcpy(tmp, inputCommand);
+
+    parsed = strtok(tmp, separator);
 
     while (parsed != NULL)
     {
-        command[j] = parsed;
+        comm[j] = parsed;
         j++;
 
         parsed = strtok(NULL, separator);
     }
 
-    command[j] = NULL;
-    return command;
+    comm[j] = NULL;
+    return comm;
 }
 
 int main(int argc, char const *argv[])
