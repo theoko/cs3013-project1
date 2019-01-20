@@ -37,7 +37,7 @@ void initConsole() //int *customCommand
 
     for (int i = 0; i < command_index; i++)
     {
-        printf("\t%d. %s : User added command\n", i + 3, *(commands + i));
+        printf("\t%d. %s : User added command\n", i + 3, commands[i]);
     }
 
     printf("\ta. add command : Adds a new command to the menu.\n");
@@ -120,7 +120,7 @@ int checkCommand(int command)
 
         size_t buffer = BUFFERSIZE;
 
-        char *command_input = (char *)malloc(buffer * sizeof(char));
+        char *command_input = (char *) malloc(buffer * sizeof(char));
 
         size_t readline = getline(&command_input, &buffer, stdin);
 
@@ -129,7 +129,7 @@ int checkCommand(int command)
             command_input[readline - 1] = '\0';
         }
 
-        commands[command_index] = (char *)malloc(buffer * sizeof(char));
+        commands[command_index] = (char *) malloc(buffer * sizeof(char));
 
         strcpy(commands[command_index], command_input);
 
@@ -183,9 +183,12 @@ int checkCommand(int command)
         // Check that user has added custom commands
         printf("%d\n", command_index);
         printf("%d\n", command);
+        command -= 48;
         if (command_index > 0 && command < command_index + 3)
         {
-            return executeAddedCommand(commands[command - 3]);
+            char **toExec = parseCommand(commands[command - 3]);
+
+            return executeAddedCommand(toExec);
         }
 
         return -1;
@@ -251,19 +254,19 @@ char **parseCommand(char input[])
     char **command = malloc(8 * sizeof(char *));
     char *separator = " ";
     char *parsed;
-    int index = 0;
+    int j = 0;
 
     parsed = strtok(input, separator);
 
     while (parsed != NULL)
     {
-        command[index] = parsed;
-        index++;
+        command[j] = parsed;
+        j++;
 
         parsed = strtok(NULL, separator);
     }
 
-    command[index] = NULL;
+    command[j] = NULL;
     return command;
 }
 
