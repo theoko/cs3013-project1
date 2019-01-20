@@ -18,6 +18,7 @@ int userInput(char *option);
 int checkCommand(int command);
 char **parseCommand(char *);
 int executeCommand(char *command);
+int executeAddedCommand(char *command);
 
 void remove_spaces(char *source);
 char **make2Dchar(int nrows, int ncolumns, char **old);
@@ -134,8 +135,10 @@ int checkCommand(int command)
 
         printf("Okay, added with ID %d!\n\n", command_index + 3);
 
-        free(command_input);
+        
         command_index++;
+
+        free(command_input);
 
         return 0;
 
@@ -177,21 +180,24 @@ int checkCommand(int command)
 
     default:
 
-        int customCommand = atoi(command);
-
-        // Check if input can be converted to an int
-        if (customCommand != 0)
+        // Check that user has added custom commands
+        printf("%d\n", command_index);
+        printf("%d\n", command);
+        if (command_index > 0 && command < command_index + 3)
         {
-            // Check that user has added custom commands
-            if (command_index > 0 && customCommand < command_index + 3)
-            {
-                return fuckingConversation(commands[customCommand - 3]);
-            }
+            return executeAddedCommand(commands[command - 3]);
         }
 
         return -1;
         break;
     }
+}
+
+int executeAddedCommand(char *command)
+{
+    printf("--%s--", command);
+
+    return 0;
 }
 
 void remove_spaces(char *source)
