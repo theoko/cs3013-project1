@@ -4,42 +4,56 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
+void remove_spaces(char *source);
 char **get_input(char *);
 
-int main() {
+int main()
+{
     char **command;
     //char *input;
     pid_t child_pid;
     int stat_loc;
     char input[100];
 
-    while (1) {
-	memset(&input[0], 0, sizeof(input));
-	
-	fgets(input, 50, stdin);
-	//printf("%s", input);
+    while (1)
+    {
+        memset(&input[0], 0, sizeof(input));
+
+        fgets(input, 50, stdin);
+        //printf("%s", input);
         command = get_input(input);
 
-        if (!command[0]) {      /* Handle empty commands */
+        remove_spaces(*command);
+
+        while(*command != NULL) {
+            printf(":%s:", *command);
+            command++;
+        }
+
+        if (!command[0])
+        { /* Handle empty commands */
             //free(input);
-	    memset(&input[0], 0, sizeof(input));
+            memset(&input[0], 0, sizeof(input));
             free(command);
             continue;
         }
 
         child_pid = fork();
-        if (child_pid == 0) {
+        if (child_pid == 0)
+        {
             /* Never returns if the call is successful */
-	    //printf("%s", *command);
+            //printf("%s", *command);
             execvp(command[0], command);
             printf("This won't be printed if execvp is successul\n");
-        } else {
+        }
+        else
+        {
             //waitpid(child_pid, &stat_loc, WUNTRACED);
-	    wait(NULL);
+            wait(NULL);
         }
 
         //free(input);
-	printf("done");
+        printf("done");
 
         free(command);
     }
@@ -47,7 +61,21 @@ int main() {
     return 0;
 }
 
-char **get_input(char input[]) {
+void remove_spaces(char *source)
+{
+  char *i = source;
+  char *j = source;
+  while(*j != 0)
+  {
+    *i = *j++;
+    if(*i != ' ')
+      i++;
+  }
+  *i = 0;
+}
+
+char **get_input(char input[])
+{
     char **command = malloc(8 * sizeof(char *));
     char *separator = " ";
     char *parsed;
@@ -55,7 +83,8 @@ char **get_input(char input[]) {
 
     parsed = strtok(input, separator);
 
-    while (parsed != NULL) {
+    while (parsed != NULL)
+    {
         command[index] = parsed;
         index++;
 
