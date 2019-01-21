@@ -80,16 +80,21 @@ int executeCommand(char *command)
     }
     else
     {
-        struct timeval tv1, tv2; // To calculate the time the command took to execute (milliseconds)
-        gettimeofday(&tv1, NULL);
-        // int rc_wait =
-        wait(NULL);
-        gettimeofday(&tv2, NULL);
-        // print out statistics
-        long int timeToExecute = (tv2.tv_usec - tv1.tv_usec) / 1000 + (tv2.tv_sec - tv1.tv_sec) * 1000;
         struct rusage usage;
         getrusage(RUSAGE_CHILDREN, &usage);
-        printf("\n-- Statistics --\nElapsed Time: %ld milliseconds\nPage Faults: %ld\nPage Faults (reclaimed): %ld\n\n", timeToExecute, usage.ru_majflt, usage.ru_minflt);
+	long initFault = usage.ru_majflt;
+	long initRecl = usage.ru_minflt;
+        struct timeval tv1, tv2; // To calculate the time the command took to execute (milliseconds)
+        gettimeofday(&tv1, NULL);
+        wait(NULL);
+        gettimeofday(&tv2, NULL);
+
+        // print out statistics
+        long int timeToExecute = (tv2.tv_usec - tv1.tv_usec) / 1000 + (tv2.tv_sec - tv1.tv_sec) * 1000;
+        getrusage(RUSAGE_CHILDREN, &usage);
+	long finalFault = usage.ru_majflt;
+	long finalRecl = usage.ru_minflt;
+        printf("\n-- Statistics --\nElapsed Time: %ld milliseconds\nPage Faults: %ld\nPage Faults (reclaimed): %ld\n\n", timeToExecute, (finalFault - initFault), (finalRecl - initRecl));;
     }
 }
 
@@ -214,6 +219,10 @@ int executeAddedCommand(char input[])
     }
     else
     {
+	struct rusage usage;
+        getrusage(RUSAGE_CHILDREN, &usage);
+	long initFault = usage.ru_majflt;
+	long initRecl = usage.ru_minflt;
         struct timeval tv1, tv2; // To calculate the time the command took to execute (milliseconds)
         gettimeofday(&tv1, NULL);
         wait(NULL);
@@ -221,9 +230,10 @@ int executeAddedCommand(char input[])
 
         // print out statistics
         long int timeToExecute = (tv2.tv_usec - tv1.tv_usec) / 1000 + (tv2.tv_sec - tv1.tv_sec) * 1000;
-        struct rusage usage;
         getrusage(RUSAGE_CHILDREN, &usage);
-        printf("\n-- Statistics --\nElapsed Time: %ld milliseconds\nPage Faults: %ld\nPage Faults (reclaimed): %ld\n\n", timeToExecute, usage.ru_majflt, usage.ru_minflt);
+	long finalFault = usage.ru_majflt;
+	long finalRecl = usage.ru_minflt;
+        printf("\n-- Statistics --\nElapsed Time: %ld milliseconds\nPage Faults: %ld\nPage Faults (reclaimed): %ld\n\n", timeToExecute, (finalFault - initFault), (finalRecl - initRecl));
     }
     
     free(command);
