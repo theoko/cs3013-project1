@@ -91,6 +91,8 @@ int executeCommand(char *command)
         getrusage(RUSAGE_CHILDREN, &usage);
         printf("\n-- Statistics --\nElapsed Time: %ld milliseconds\nPage Faults: %ld\nPage Faults (reclaimed): %ld\n\n", timeToExecute, usage.ru_majflt, usage.ru_minflt);
     }
+
+    return 0;
 }
 
 int checkCommand(int command)
@@ -180,8 +182,8 @@ int checkCommand(int command)
     default:
 
         // Check that user has added custom commands
-        printf("%d\n", command_index);
-        printf("%d\n", command);
+//        printf("%d\n", command_index);
+//        printf("%d\n", command);
 	    command -= 48;
         if (command_index > 0 && command < command_index + 3)
         {
