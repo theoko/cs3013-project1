@@ -1,8 +1,10 @@
 CFLAGS = -Wall -g
 
-ls1: ls1.o
-	gcc $(CFLAGS) ls1.o -lm -o ls1
-ls1.o: ls1.c
-	gcc $(CFLAGS) -c ls1.c
+all: mc2
+
+mc2: mc2.o
+	gcc $(CFLAGS) mc2.o -lm -o mc2
+mc2.o: mc2.c
+	gcc $(CFLAGS) -c mc2.c
 clean:
-	rm -f *.o ls1 
+	rm -f *.o mc2
