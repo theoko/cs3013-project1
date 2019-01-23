@@ -96,6 +96,8 @@ int executeCommand(char *command)
 	long finalRecl = usage.ru_minflt;
         printf("\n-- Statistics --\nElapsed Time: %ld milliseconds\nPage Faults: %ld\nPage Faults (reclaimed): %ld\n\n", timeToExecute, (finalFault - initFault), (finalRecl - initRecl));;
     }
+
+    return 0;
 }
 
 int checkCommand(int command)
