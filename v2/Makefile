@@ -1,4 +1,4 @@
-CFLAGS = -Wall -g
+CFLAGS = -pthread -Wall -g 
 
 all: mc2
 

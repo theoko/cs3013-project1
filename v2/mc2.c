@@ -19,17 +19,24 @@
 #define COMMANDS_MAX 200
 
 void initConsole(); //int *customCommand
+
 int userInput(char *option);
+
 int checkCommand(int command);
-char **parseCommand(char *);
+
+char **parseCommand(char *, char *);
+
 int executeCommand(char *command);
+
 int executeAddedCommand(char *command);
+
 int executeBackgroundCommand(char *command);
-int create_thread(pthread_t thread, char *inputCommand);
+
+//int create_thread(pthread_t *thread, char *inputCommand);
+
+void *executeProgram(void *arg);
 
 int detectAmp(char inputCommand[]);
-
-void remove_spaces(char *source);
 
 int command_index = 0;
 char *commands[COMMANDS_MAX];
@@ -217,7 +224,7 @@ int executeAddedCommand(char input[])
 {
     char **command;
 
-    command = parseCommand(input);
+    command = parseCommand(input, " ");
     int rc = fork();
 
     if (rc < 0)
@@ -256,66 +263,36 @@ int executeAddedCommand(char input[])
 
 int executeBackgroundCommand(char *command) {
 
-//	pid_t pid = fork();
-//
-//    if (pid < 0)
-//    {
-//        fprintf(stderr, "fork failed\n");
-//        exit(1);
-//    }
-//
-//	// TODO: will handle error here (<0)
-//	if(pid  == 0) { // child
-//		// output whatever is required from the example
-//		initConsole();
-//		char* newInput = malloc(sizeof(char));
-//
-//		if(userInput(newInput) == 0) {
-//			checkCommand(newInput);
-//		}
-//
-//		free(newInput);
-//
-//		char **inputCommand;
-//		inputCommand = parseCommand(command);
-//
-//		execvp();// this command -- first command
-//
-//	} else if (pid > 0) {
-//		int status;
-//
-//		waitpid(pid, status, WUNTRACED);
-//	}
 
-	pthread_t p1;
+	pthread_t thr;
+	pthread_t* pntr = &thr;
 
-	create_thread(p1, command);
+//	create_thread(pntr, command);
 
+	pthread_create(pntr, NULL, executeProgram, (void *) command);
+
+//	pthread_join(pntr, NULL);
+
+	// join
+	// printf
 	return 0;
 }
 
-int create_thread(pthread_t thread, char *inputCommand) {
+void *executeProgram(void *arg) {
 
-	//pointer to function executeProgram
-	//delete & from inputCommand value
+	printf("\n Thread started: %s \n", (char *) arg);
 
-	pthread_create(&thread, NULL, , &inputCommand);
+	char command[strlen(arg)];
+	strncpy(command, arg, strlen(arg));
+	command[strlen(arg) - 1] = '\0';
 
-	return 0;
+	printf("\n Thread executes: %s \n", command);
+
+	executeAddedCommand(command);
+
+	return NULL;
 }
 
-void remove_spaces(char *source)
-{
-    char *i = source;
-    char *j = source;
-    while (*j != 0)
-    {
-        *i = *j++;
-        if (*i != ' ')
-            i++;
-    }
-    *i = 0;
-}
 
 int detectAmp(char inputCommand[]) {
 
@@ -331,10 +308,9 @@ int detectAmp(char inputCommand[]) {
 
 }
 
-char **parseCommand(char inputCommand[])
+char **parseCommand(char inputCommand[], char *separator)
 {
     char **comm = malloc(8 * sizeof(char *));
-    char *separator = " ";
     char *parsed;
     int j = 0;
 
