@@ -1,3 +1,8 @@
+/*
+ * Fivos Kavassalis - fikavassalis
+ * Theodoros Konstantopoulos - tkonstantopoulos
+ */
+
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,6 +24,10 @@ int checkCommand(int command);
 char **parseCommand(char *);
 int executeCommand(char *command);
 int executeAddedCommand(char *command);
+int executeBackgroundCommand(char *command);
+int create_thread(pthread_t thread, char *inputCommand);
+
+int detectAmp(char inputCommand[]);
 
 void remove_spaces(char *source);
 
@@ -44,6 +53,7 @@ void initConsole() //int *customCommand
     printf("\te. exit : Leave Mid-Day Commander\n");
     printf("\tp. pwd : Prints working directory\n");
     printf("Option?: ");
+
 }
 
 int userInput(char *option)
@@ -140,7 +150,6 @@ int checkCommand(int command)
         strcpy(commands[command_index], command_input);
 
         printf("Okay, added with ID %d!\n\n", command_index + 3);
-
         
         command_index++;
 
@@ -187,13 +196,16 @@ int checkCommand(int command)
     default:
 
         // Check that user has added custom commands
-        printf("%d\n", command_index);
-        printf("%d\n", command);
+//        printf("%d\n", command_index);
+//        printf("%d\n", command);
 	    command -= 48;
         if (command_index > 0 && command < command_index + 3)
         {
-
-            return executeAddedCommand(commands[command - 3]);
+        	if(detectAmp(commands[command - 3])){
+        		return executeBackgroundCommand(commands[command - 3]);
+        	} else {
+        		return executeAddedCommand(commands[command - 3]);
+        	}
         }
 
         return -1;
@@ -217,7 +229,6 @@ int executeAddedCommand(char input[])
     {
         execvp(command[0], command);
         printf("execvp was not successful\n");
-
     }
     else
     {
@@ -243,6 +254,56 @@ int executeAddedCommand(char input[])
     return 0;
 }
 
+int executeBackgroundCommand(char *command) {
+
+//	pid_t pid = fork();
+//
+//    if (pid < 0)
+//    {
+//        fprintf(stderr, "fork failed\n");
+//        exit(1);
+//    }
+//
+//	// TODO: will handle error here (<0)
+//	if(pid  == 0) { // child
+//		// output whatever is required from the example
+//		initConsole();
+//		char* newInput = malloc(sizeof(char));
+//
+//		if(userInput(newInput) == 0) {
+//			checkCommand(newInput);
+//		}
+//
+//		free(newInput);
+//
+//		char **inputCommand;
+//		inputCommand = parseCommand(command);
+//
+//		execvp();// this command -- first command
+//
+//	} else if (pid > 0) {
+//		int status;
+//
+//		waitpid(pid, status, WUNTRACED);
+//	}
+
+	pthread_t p1;
+
+	create_thread(p1, command);
+
+	return 0;
+}
+
+int create_thread(pthread_t thread, char *inputCommand) {
+
+	//pointer to function executeProgram
+	//delete & from inputCommand value
+
+	pthread_create(&thread, NULL, , &inputCommand);
+
+	return 0;
+}
+
 void remove_spaces(char *source)
 {
     char *i = source;
@@ -254,6 +315,20 @@ void remove_spaces(char *source)
             i++;
     }
     *i = 0;
+}
+
+int detectAmp(char inputCommand[]) {
+
+	char *ptr;
+	int amp = '&';
+
+	ptr = strchr(inputCommand, amp);
+
+	if(ptr == NULL)
+		return 0;
+	else
+		return 1;
+
 }
 
 char **parseCommand(char inputCommand[])
@@ -309,7 +384,7 @@ int main(int argc, char const *argv[])
         {
             // Error reading input
             // Print error message
-            fprintf(stderr, "\n\nWrong input. Please run again and type an integer from 0 to 2\n");
+            fprintf(stderr, "\n\nWrong input.\n");
             exit(1);
         }
     }
