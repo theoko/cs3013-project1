@@ -28,7 +28,7 @@ char **parseCommand(char *, char *);
 
 int executeCommand(char *command);
 
-int executeAddedCommand(char *command);
+int executeAddedCommand(char *command, int background);
 
 int executeBackgroundCommand(char *command);
 
@@ -39,6 +39,7 @@ void *executeProgram(void *arg);
 int detectAmp(char inputCommand[]);
 
 int command_index = 0;
+int background_command_count = 0;
 char *commands[COMMANDS_MAX];
 
 void initConsole() //int *customCommand
@@ -209,9 +210,10 @@ int checkCommand(int command)
         if (command_index > 0 && command < command_index + 3)
         {
         	if(detectAmp(commands[command - 3])){
+        		background_command_count++;
         		return executeBackgroundCommand(commands[command - 3]);
         	} else {
-        		return executeAddedCommand(commands[command - 3]);
+        		return executeAddedCommand(commands[command - 3], 0);
         	}
         }
 
@@ -220,7 +222,7 @@ int checkCommand(int command)
     }
 }
 
-int executeAddedCommand(char input[])
+int executeAddedCommand(char input[], int background)
 {
     char **command;
 
@@ -234,15 +236,21 @@ int executeAddedCommand(char input[])
     }
     else if (rc == 0)
     {
+//    	if(background) {
+//    		printf("\n -- Command: %s -- \n", input);
+//    		printf("[%d] %ld", background_command_count, pthread_self());
+//    	}
+
         execvp(command[0], command);
         printf("execvp was not successful\n");
     }
     else
     {
-	struct rusage usage;
+
+    	struct rusage usage;
         getrusage(RUSAGE_CHILDREN, &usage);
-	long initFault = usage.ru_majflt;
-	long initRecl = usage.ru_minflt;
+        long initFault = usage.ru_majflt;
+		long initRecl = usage.ru_minflt;
         struct timeval tv1, tv2; // To calculate the time the command took to execute (milliseconds)
         gettimeofday(&tv1, NULL);
         wait(NULL);
@@ -251,8 +259,15 @@ int executeAddedCommand(char input[])
         // print out statistics
         long int timeToExecute = (tv2.tv_usec - tv1.tv_usec) / 1000 + (tv2.tv_sec - tv1.tv_sec) * 1000;
         getrusage(RUSAGE_CHILDREN, &usage);
-	long finalFault = usage.ru_majflt;
-	long finalRecl = usage.ru_minflt;
+        long finalFault = usage.ru_majflt;
+		long finalRecl = usage.ru_minflt;
+
+		if(background) {
+			printf("\n\n -- Job Complete [%d] -- \n", background_command_count);
+			printf("Process ID: %ld\n", pthread_self());
+			background_command_count--;
+		}
+
         printf("\n-- Statistics --\nElapsed Time: %ld milliseconds\nPage Faults: %ld\nPage Faults (reclaimed): %ld\n\n", timeToExecute, (finalFault - initFault), (finalRecl - initRecl));
     }
     
@@ -273,22 +288,25 @@ int executeBackgroundCommand(char *command) {
 
 //	pthread_join(pntr, NULL);
 
-	// join
-	// printf
 	return 0;
 }
 
 void *executeProgram(void *arg) {
 
-	printf("\n Thread started: %s \n", (char *) arg);
+//	printf("\n Thread started: %s \n", (char *) arg);
 
 	char command[strlen(arg)];
 	strncpy(command, arg, strlen(arg));
 	command[strlen(arg) - 1] = '\0';
 
-	printf("\n Thread executes: %s \n", command);
+//	printf("\n Thread executes: %s \n", command);
 
-	executeAddedCommand(command);
+	int command_number = background_command_count;
+
+	printf("\n\n -- Command: %s -- \n", (char *) arg);
+	printf("[%d] %ld", background_command_count, pthread_self());
+
+	executeAddedCommand(command, 1);
 
 	return NULL;
 }
