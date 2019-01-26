@@ -18,6 +18,14 @@
 #define BUFFERSIZE 50
 #define COMMANDS_MAX 200
 
+struct Node
+{
+  unsigned int id;
+  char *data;
+  int active;
+  struct Node *next;
+};
+
 void initConsole(); //int *customCommand
 
 int userInput(char *option);
@@ -28,24 +36,31 @@ char **parseCommand(char *, char *);
 
 int executeCommand(char *command);
 
-int executeAddedCommand(char *command, int background);
+int executeAddedCommand(char *command, int background, int current);
 
 int executeBackgroundCommand(char *command);
 
-//int create_thread(pthread_t *thread, char *inputCommand);
+void searchAndDisable(struct Node *node, unsigned int thread_id);
+
+int checkList(struct Node *node);
 
 void *executeProgram(void *arg);
 
+void printChar(void *c);
+
 int detectAmp(char inputCommand[]);
+
+struct Node *start = NULL;
 
 int command_index = 0;
 int background_command_count = 0;
+int total_background = 0;
 char *commands[COMMANDS_MAX];
 
 void initConsole() //int *customCommand
 {
 
-    printf("===== Mid-Day Commander, v1 =====\n");
+    printf("===== Mid-Day Commander, v2 =====\n");
     printf("G’day, Commander! What command would you like to run?\n");
     printf("\t0. whoami : Prints out the result of the whoamicommand\n");
     printf("\t1. last : Prints out the result of the last command\n");
@@ -60,6 +75,8 @@ void initConsole() //int *customCommand
     printf("\tc. change directory : Changes process working directory\n");
     printf("\te. exit : Leave Mid-Day Commander\n");
     printf("\tp. pwd : Prints working directory\n");
+    printf("\tr. running processes : Print list of running processes\n");
+
     printf("Option?: ");
 
 }
@@ -77,6 +94,62 @@ int userInput(char *option)
     {
         return -1;
     }
+}
+
+void push(struct Node** head_ref, void *new_data, int id, size_t data_size)
+{
+    // Allocate memory for node
+    struct Node* new_node = (struct Node*)malloc(sizeof(struct Node));
+
+    new_node->id = id;
+    new_node->data  = malloc(data_size);
+    strcpy(new_node->data, (char *) new_data);
+    new_node->active = 1;
+    new_node->next = (*head_ref);
+
+    int i;
+    for (i=0; i<data_size; i++)
+        *(char *)(new_node->data + i) = *(char *)(new_data + i);
+
+    (*head_ref)    = new_node;
+}
+
+void searchAndDisable(struct Node *node, unsigned int thread_id)
+{
+    while (node != NULL)
+    {
+    	if(node->id == thread_id) {
+    		node->active = 0;
+    	}
+        node = node->next;
+    }
+}
+
+int checkList(struct Node *node) {
+	while (node != NULL)
+	{
+		if(node->active)
+			return 0;
+		node = node->next;
+	}
+
+	return 1;
+}
+
+void printList(struct Node *node, void (*fptr)(void *))
+{
+	int i=0;
+    while (node != NULL)
+    {
+    	if(node->active) {
+    		i++;
+    		printf("%d. ", i);
+    		(*fptr)(node->data);
+    	}
+        node = node->next;
+    }
+
+    printf("\n");
 }
 
 int executeCommand(char *command)
@@ -192,14 +265,28 @@ int checkCommand(int command)
         break;
 
     case 'e':
-        printf("Logging you out, Commander.\n");
-        exit(0);
+    	if(!checkList(start)) {
+    		printf("The background processes have not been completed yet.\n");
+    		printf("Waiting.\n");
+    		while(!checkList(start));
+
+    		printf("Logging you out, Commander.\n");
+    		exit(0);
+    	} else {
+    		printf("Logging you out, Commander.\n");
+        	exit(0);
+    	}
         break;
 
     case 'p':
         printf("\n\n-- Current directory --\n");
         return executeCommand("pwd");
         break;
+
+    case 'r':
+    	printf("\n\n -- Background Processes -- \n\n");
+    	printList(start, printChar);
+    	break;
 
     default:
 
@@ -211,18 +298,21 @@ int checkCommand(int command)
         {
         	if(detectAmp(commands[command - 3])){
         		background_command_count++;
+        		total_background++;
         		return executeBackgroundCommand(commands[command - 3]);
         	} else {
-        		return executeAddedCommand(commands[command - 3], 0);
+        		return executeAddedCommand(commands[command - 3], 0, 0);
         	}
         }
 
         return -1;
         break;
     }
+
+    return 0;
 }
 
-int executeAddedCommand(char input[], int background)
+int executeAddedCommand(char input[], int background, int current)
 {
     char **command;
 
@@ -263,8 +353,9 @@ int executeAddedCommand(char input[], int background)
 		long finalRecl = usage.ru_minflt;
 
 		if(background) {
-			printf("\n\n -- Job Complete [%d] -- \n", background_command_count);
+			printf("\n\n -- Job Complete [%d] -- \n", current);
 			printf("Process ID: %ld\n", pthread_self());
+			searchAndDisable(start, pthread_self());
 			background_command_count--;
 		}
 
@@ -276,6 +367,11 @@ int executeAddedCommand(char input[], int background)
     return 0;
 }
 
+void printChar(void *c)
+{
+   printf("%s\n", (char *)c);
+}
+
 int executeBackgroundCommand(char *command) {
 
 
@@ -285,6 +381,7 @@ int executeBackgroundCommand(char *command) {
 //	create_thread(pntr, command);
 
 	pthread_create(pntr, NULL, executeProgram, (void *) command);
+
 
 //	pthread_join(pntr, NULL);
 
@@ -303,10 +400,13 @@ void *executeProgram(void *arg) {
 
 	int command_number = background_command_count;
 
-	printf("\n\n -- Command: %s -- \n", (char *) arg);
-	printf("[%d] %ld", background_command_count, pthread_self());
+	unsigned int thread_id = pthread_self();
+	push(&start, command, thread_id, sizeof(thread_id));
 
-	executeAddedCommand(command, 1);
+	printf("\n\n -- Command: %s -- \n", (char *) arg);
+	printf("[%d] %ld\n", background_command_count, pthread_self());
+
+	executeAddedCommand(command, 1, command_number);
 
 	return NULL;
 }
